@@ -1,6 +1,17 @@
 module Tolk
-  class Translation < ActiveRecord::Base
-    set_table_name "tolk_translations"
+  class Translation
+    include MongoMapper::Document
+    key :_id, String
+    key :phrase_id, String
+    key :locale_id, String
+    key :text, String
+    key :primary_updated, Boolean, :default => false
+    key :previous_text, String
+
+    timestamps!
+
+    ## FIXME: turn that into mongomapper
+    ## add_index "tolk_translations", ["phrase_id", "locale_id"], :name => "index_tolk_translations_on_phrase_id_and_locale_id", :unique => true
 
     serialize :text
     validates_presence_of :text, :if => proc {|r| r.primary.blank? && !r.explicit_nil }

@@ -1,6 +1,13 @@
 module Tolk
-  class Locale < ActiveRecord::Base
-    set_table_name "tolk_locales"
+  class Locale
+    include MongoMapper::Document
+    key :_id, String
+    key :name, String
+
+    timestamps!
+
+    ## FIXME: turn that into mongomapper
+    ## add_index "tolk_locales", ["name"], :name => "index_tolk_locales_on_name", :unique => true
 
     MAPPING = {
       'ar'    => 'Arabic',
@@ -143,14 +150,14 @@ module Tolk
 
       translations = Tolk::Locale.primary_locale.translations.all(:conditions => ["tolk_translations.text LIKE ?", "%#{query}%"])
 
-      phrases = Tolk::Phrase.scoped(:order => 'tolk_phrases.key ASC')      
+      phrases = Tolk::Phrase.scoped(:order => 'tolk_phrases.key ASC')
       phrases = phrases.scoped(:conditions => ['tolk_phrases.id IN(?)', translations.map(&:phrase_id).uniq])
       phrases.paginate({:page => page}.merge(options))
     end
-    
+
     def search_phrases_without_translation(query, page = nil, options = {})
       return phrases_without_translation(page, options) unless query.present?
-      
+
       phrases = Tolk::Phrase.scoped(:order => 'tolk_phrases.key ASC')
 
       found_translations_ids = Tolk::Locale.primary_locale.translations.all(:conditions => ["tolk_translations.text LIKE ?", "%#{query}%"], :select => 'tolk_translations.phrase_id').map(&:phrase_id).uniq
@@ -192,7 +199,7 @@ module Tolk
     end
 
     def translations_with_html
-      translations = self.translations.all(:conditions => "tolk_translations.text LIKE '%>%' AND 
+      translations = self.translations.all(:conditions => "tolk_translations.text LIKE '%>%' AND
         tolk_translations.text LIKE '%<%' AND tolk_phrases.key NOT LIKE '%_html'", :joins => :phrase)
       Translation.send :preload_associations, translations, :phrase
       translations

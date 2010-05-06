@@ -1,6 +1,13 @@
 module Tolk
-  class Phrase < ActiveRecord::Base
-    set_table_name "tolk_phrases"
+  class Phrase
+    include MongoMapper::Document
+    key :_id, String
+    key :key, String
+
+    timestamps!
+
+    ## FIXME: turn that into mongomapper
+    ## add_index "tolk_phrases", ["key"], :name => "index_tolk_phrases_on_key", :unique => true
 
     validates_uniqueness_of :key
 
